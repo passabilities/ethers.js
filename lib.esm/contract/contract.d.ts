@@ -5,7 +5,7 @@ import type { EventFragment, FunctionFragment, InterfaceAbi, ParamType } from ".
 import type { Addressable } from "../address/index.js";
 import type { EventEmitterable, Listener } from "../utils/index.js";
 import type { BlockTag, ContractRunner } from "../providers/index.js";
-import type { ContractEventName, ContractInterface, ContractMethod, ContractEvent, ContractTransaction, WrappedFallback } from "./types.js";
+import type { ContractEventName, ContractInterface, ContractMethod, ContractEvent, ContractTransaction, WrappedFallback, Overrides } from './types.js';
 /**
  *  @_ignore:
  */
@@ -53,7 +53,11 @@ export declare class BaseContract implements Addressable, EventEmitterable<Contr
      *  optionally connected to a %%runner%% to perform operations on behalf
      *  of.
      */
-    constructor(target: string | Addressable, abi: Interface | InterfaceAbi, runner?: null | ContractRunner, _deployTx?: null | TransactionResponse);
+    constructor(target: string | Addressable, abi: Interface | InterfaceAbi, runner?: null | ContractRunner, _deployTx?: null | TransactionResponse, _defaultOverrides?: null | Overrides);
+    constructor(target: string | Addressable, abi: Interface | InterfaceAbi, runner?: null | ContractRunner, _opts?: {
+        _deployTx?: null | TransactionResponse;
+        _defaultOverrides?: null | Overrides;
+    });
     /**
      *  Return a new Contract instance with the same target and ABI, but
      *  a different %%runner%%.
@@ -84,6 +88,13 @@ export declare class BaseContract implements Addressable, EventEmitterable<Contr
      *  [[ContractFactory]].
      */
     deploymentTransaction(): null | ContractTransactionResponse;
+    /**
+     *  Return the transaction used to deploy this contract.
+     *
+     *  This is only available if this instance was returned from a
+     *  [[ContractFactory]].
+     */
+    defaultOverrides(): null | Overrides;
     /**
      *  Return the function for a given name. This is useful when a contract
      *  method name conflicts with a JavaScript name such as ``prototype`` or
@@ -158,7 +169,9 @@ export declare class BaseContract implements Addressable, EventEmitterable<Contr
      */
     static from<T = ContractInterface>(target: string, abi: Interface | InterfaceAbi, runner?: null | ContractRunner): BaseContract & Omit<T, keyof BaseContract>;
 }
-declare const Contract_base: new (target: string, abi: Interface | InterfaceAbi, runner?: ContractRunner | null | undefined) => BaseContract & Omit<ContractInterface, keyof BaseContract>;
+declare const Contract_base: new (target: string, abi: Interface | InterfaceAbi, runner?: ContractRunner | null | undefined, _opts?: {
+    _defaultOverrides?: Overrides | null | undefined;
+} | undefined) => BaseContract & Omit<ContractInterface, keyof BaseContract>;
 /**
  *  A [[BaseContract]] with no type guards on its methods or events.
  */
