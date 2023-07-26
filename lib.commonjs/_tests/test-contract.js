@@ -26,6 +26,28 @@ describe("Test Contract", function () {
         assert_1.default.equal(await contract.testCallAdd(4, 5), BigInt(9), "testCallAdd(4, 5)");
         assert_1.default.equal(await contract.testCallAdd(6, 0), BigInt(6), "testCallAdd(6, 0)");
     });
+    it("tests contract default overrides", async function () {
+        this.timeout(10000);
+        const provider = (0, create_provider_js_1.getProvider)("InfuraProvider", "goerli");
+        const contract1 = new index_js_1.Contract(addr, abi, { provider }, {
+            _defaultOverrides: {
+                gasLimit: BigInt(9999999),
+                value: BigInt(1234567890)
+            }
+        });
+        const contract2 = new index_js_1.Contract(addr, abi, { provider }, {
+            _defaultOverrides: {
+                gasLimit: BigInt(2222222),
+                value: BigInt(9876543210)
+            }
+        });
+        const tx1 = await contract1.testCallAdd.populateTransaction(4, 5);
+        const tx2 = await contract2.testCallAdd.populateTransaction(4, 5);
+        assert_1.default.equal(tx1.gasLimit, BigInt(9999999), "contract1 default overrides gasLimit");
+        assert_1.default.equal(tx1.value, BigInt(1234567890), "contract1 default overrides value");
+        assert_1.default.equal(tx2.gasLimit, BigInt(2222222), "contract2 default overrides gasLimit");
+        assert_1.default.equal(tx2.value, BigInt(9876543210), "contract2 default overrides value");
+    });
     it("tests events", async function () {
         this.timeout(60000);
         const provider = (0, create_provider_js_1.getProvider)("InfuraProvider", "goerli");

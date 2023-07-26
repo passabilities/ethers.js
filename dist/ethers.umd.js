@@ -14168,6 +14168,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         return method;
     }
     function buildWrappedMethod(contract, key) {
+        const defaultOverrides = getInternal(contract).defaultOverrides;
         const getFragment = function (...args) {
             const fragment = contract.interface.getFunction(key, args);
             assert$1(fragment, "no matching fragment", "UNSUPPORTED_OPERATION", {
@@ -14179,9 +14180,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         const populateTransaction = async function (...args) {
             const fragment = getFragment(...args);
             // If an overrides was passed in, copy it and normalize the values
-            let overrides = {};
+            let overrides = await copyOverrides(defaultOverrides);
             if (fragment.inputs.length + 1 === args.length) {
-                overrides = await copyOverrides(args.pop());
+                overrides = Object.assign({}, defaultOverrides, await copyOverrides(args.pop()));
             }
             if (fragment.inputs.length !== args.length) {
                 throw new Error("internal error: fragment inputs doesn't match arguments; should not happen");
@@ -14514,13 +14515,17 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *  The fallback or receive function if any.
          */
         fallback;
-        /**
-         *  Creates a new contract connected to %%target%% with the %%abi%% and
-         *  optionally connected to a %%runner%% to perform operations on behalf
-         *  of.
-         */
-        constructor(target, abi, runner, _deployTx) {
+        constructor(target, abi, runner, _optsOrDeployTx, _defaultOverrides) {
             assertArgument(typeof (target) === "string" || isAddressable(target), "invalid value for Contract target", "target", target);
+            let _deployTx = null;
+            if (_optsOrDeployTx && typeof _optsOrDeployTx === "object") {
+                if ("_deployTx" in _optsOrDeployTx) {
+                    _deployTx = _optsOrDeployTx._deployTx ?? _deployTx;
+                }
+                if ("_defaultOverrides" in _optsOrDeployTx) {
+                    _defaultOverrides = _optsOrDeployTx._defaultOverrides ?? _defaultOverrides;
+                }
+            }
             if (runner == null) {
                 runner = null;
             }
@@ -14535,6 +14540,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 // @TODO: the provider can be null; make a custom dummy provider that will throw a
                 // meaningful error
                 deployTx = new ContractTransactionResponse(this.interface, provider, _deployTx);
+            }
+            let defaultOverrides = null;
+            if (_defaultOverrides) {
+                defaultOverrides = Object.assign({}, _defaultOverrides);
             }
             let subs = new Map();
             // Resolve the target as the address
@@ -14571,7 +14580,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 });
             }
             // Set our private values
-            setInternal(this, { addrPromise, addr, deployTx, subs });
+            setInternal(this, { addrPromise, addr, deployTx, subs, defaultOverrides });
             // Add the event filters
             const filters = new Proxy({}, {
                 get: (target, prop, receiver) => {
@@ -14699,6 +14708,15 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         deploymentTransaction() {
             return getInternal(this).deployTx;
+        }
+        /**
+         *  Return the transaction used to deploy this contract.
+         *
+         *  This is only available if this instance was returned from a
+         *  [[ContractFactory]].
+         */
+        defaultOverrides() {
+            return getInternal(this).defaultOverrides;
         }
         /**
          *  Return the function for a given name. This is useful when a contract
