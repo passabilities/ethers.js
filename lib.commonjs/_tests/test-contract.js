@@ -42,11 +42,11 @@ describe("Test Contract", function () {
             }
         });
         const tx1 = await contract1.testCallAdd.populateTransaction(4, 5);
-        const tx2 = await contract2.testCallAdd.populateTransaction(4, 5);
+        const tx2 = await contract2.testCallAdd.populateTransaction(4, 5, { value: BigInt(123) });
         assert_1.default.equal(tx1.gasLimit, BigInt(9999999), "contract1 default overrides gasLimit");
         assert_1.default.equal(tx1.value, BigInt(1234567890), "contract1 default overrides value");
         assert_1.default.equal(tx2.gasLimit, BigInt(2222222), "contract2 default overrides gasLimit");
-        assert_1.default.equal(tx2.value, BigInt(9876543210), "contract2 default overrides value");
+        assert_1.default.equal(tx2.value, BigInt(123), "contract2 default overrides value");
     });
     it("tests events", async function () {
         this.timeout(60000);
